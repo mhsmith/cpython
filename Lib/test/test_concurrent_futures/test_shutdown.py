@@ -9,9 +9,8 @@ from test import support
 from test.support.script_helper import assert_python_ok
 
 from .util import (
-    BaseTestCase, ThreadPoolMixin, ProcessPoolForkMixin,
-    ProcessPoolForkserverMixin, ProcessPoolSpawnMixin,
-    create_executor_tests, setup_module)
+    BaseTestCase, ThreadPoolMixin, create_executor_tests, process_mixins,
+    setup_module)
 
 
 def sleep_and_print(t, msg):
@@ -330,9 +329,7 @@ class ProcessPoolShutdownTest(ExecutorShutdownTest):
 
 
 create_executor_tests(globals(), ProcessPoolShutdownTest,
-                      executor_mixins=(ProcessPoolForkMixin,
-                                       ProcessPoolForkserverMixin,
-                                       ProcessPoolSpawnMixin))
+                      executor_mixins=process_mixins)
 
 
 def setUpModule():

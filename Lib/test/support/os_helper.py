@@ -198,6 +198,12 @@ def skip_unless_symlink(test):
     return test if ok else unittest.skip(msg)(test)
 
 
+def can_hardlink():
+    # Android blocks hard links using SELinux
+    # (https://stackoverflow.com/questions/32365690).
+    return hasattr(os, "link") and not support.is_android
+
+
 _can_xattr = None
 
 

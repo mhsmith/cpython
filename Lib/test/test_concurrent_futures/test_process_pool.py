@@ -10,9 +10,7 @@ from test import support
 from test.support import hashlib_helper
 
 from .executor import ExecutorTest, mul
-from .util import (
-    ProcessPoolForkMixin, ProcessPoolForkserverMixin, ProcessPoolSpawnMixin,
-    create_executor_tests, setup_module)
+from .util import create_executor_tests, process_mixins, setup_module
 
 
 class EventfulGCObj():
@@ -218,9 +216,7 @@ class ProcessPoolExecutorTest(ExecutorTest):
 
 
 create_executor_tests(globals(), ProcessPoolExecutorTest,
-                      executor_mixins=(ProcessPoolForkMixin,
-                                       ProcessPoolForkserverMixin,
-                                       ProcessPoolSpawnMixin))
+                      executor_mixins=process_mixins)
 
 
 def setUpModule():

@@ -11,9 +11,7 @@ from concurrent.futures.process import BrokenProcessPool, _ThreadWakeup
 
 from test import support
 
-from .util import (
-    create_executor_tests, setup_module,
-    ProcessPoolForkMixin, ProcessPoolForkserverMixin, ProcessPoolSpawnMixin)
+from .util import create_executor_tests, process_mixins, setup_module
 
 
 def _crash(delay=None):
@@ -320,9 +318,7 @@ class ExecutorDeadlockTest:
 
 
 create_executor_tests(globals(), ExecutorDeadlockTest,
-                      executor_mixins=(ProcessPoolForkMixin,
-                                       ProcessPoolForkserverMixin,
-                                       ProcessPoolSpawnMixin))
+                      executor_mixins=process_mixins)
 
 def setUpModule():
     setup_module()

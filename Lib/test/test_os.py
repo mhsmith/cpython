@@ -1592,6 +1592,9 @@ class FwalkTests(WalkTests):
     @unittest.skipIf(
         support.is_emscripten, "Cannot dup stdout on Emscripten"
     )
+    @unittest.skipIf(
+        support.is_android, "dup return value is unpredictable on Android"
+    )
     def test_fd_leak(self):
         # Since we're opening a lot of FDs, we must be careful to avoid leaks:
         # we both check that calling fwalk() a large number of times doesn't
@@ -2478,8 +2481,8 @@ class Pep383Tests(unittest.TestCase):
         # test listdir without arguments
         current_directory = os.getcwd()
         try:
-            os.chdir(os.sep)
-            self.assertEqual(set(os.listdir()), set(os.listdir(os.sep)))
+            os.chdir(self.dir)
+            self.assertEqual(set(os.listdir()), expected)
         finally:
             os.chdir(current_directory)
 
@@ -4822,7 +4825,7 @@ class TestScandir(unittest.TestCase):
                                os.name == 'nt')
 
     def test_attributes(self):
-        link = hasattr(os, 'link')
+        link = os_helper.can_hardlink()
         symlink = os_helper.can_symlink()
 
         dirname = os.path.join(self.path, "dir")

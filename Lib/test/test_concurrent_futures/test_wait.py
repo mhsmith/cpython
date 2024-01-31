@@ -8,9 +8,8 @@ from test import support
 from .util import (
     CANCELLED_FUTURE, CANCELLED_AND_NOTIFIED_FUTURE, EXCEPTION_FUTURE,
     SUCCESSFUL_FUTURE,
-    create_executor_tests, setup_module,
-    BaseTestCase, ThreadPoolMixin,
-    ProcessPoolForkMixin, ProcessPoolForkserverMixin, ProcessPoolSpawnMixin)
+    create_executor_tests, process_mixins, setup_module,
+    BaseTestCase, ThreadPoolMixin)
 
 
 def mul(x, y):
@@ -151,10 +150,7 @@ class ThreadPoolWaitTests(ThreadPoolMixin, WaitTests, BaseTestCase):
             sys.setswitchinterval(oldswitchinterval)
 
 
-create_executor_tests(globals(), WaitTests,
-                      executor_mixins=(ProcessPoolForkMixin,
-                                       ProcessPoolForkserverMixin,
-                                       ProcessPoolSpawnMixin))
+create_executor_tests(globals(), WaitTests, executor_mixins=process_mixins)
 
 
 def setUpModule():

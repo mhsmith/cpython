@@ -6,6 +6,7 @@ import os
 import struct
 import sys
 import unittest
+from test import support
 from test.support import verbose, cpython_only, get_pagesize
 from test.support.import_helper import import_module
 from test.support.os_helper import TESTFN, unlink
@@ -125,7 +126,8 @@ class TestFcntl(unittest.TestCase):
             fcntl.fcntl(BadFile(INT_MIN - 1), fcntl.F_SETFL, os.O_NONBLOCK)
 
     @unittest.skipIf(
-        platform.machine().startswith('arm') and platform.system() == 'Linux',
+        (platform.machine().startswith('arm') or platform.machine() == "aarch64")
+        and platform.system() == 'Linux',
         "ARM Linux returns EINVAL for F_NOTIFY DN_MULTISHOT")
     def test_fcntl_64_bit(self):
         # Issue #1309352: fcntl shouldn't fail when the third arg fits in a
@@ -156,6 +158,7 @@ class TestFcntl(unittest.TestCase):
         self.assertRaises(ValueError, fcntl.flock, -1, fcntl.LOCK_SH)
         self.assertRaises(TypeError, fcntl.flock, 'spam', fcntl.LOCK_SH)
 
+    @support.requires_subprocess()
     @unittest.skipIf(platform.system() == "AIX", "AIX returns PermissionError")
     def test_lockf_exclusive(self):
         self.f = open(TESTFN, 'wb+')
@@ -168,6 +171,7 @@ class TestFcntl(unittest.TestCase):
         fcntl.lockf(self.f, fcntl.LOCK_UN)
         self.assertEqual(p.exitcode, 0)
 
+    @support.requires_subprocess()
     @unittest.skipIf(platform.system() == "AIX", "AIX returns PermissionError")
     def test_lockf_share(self):
         self.f = open(TESTFN, 'wb+')

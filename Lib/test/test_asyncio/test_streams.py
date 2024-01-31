@@ -10,7 +10,7 @@ import threading
 import unittest
 from unittest import mock
 import warnings
-from test.support import socket_helper
+from test.support import requires_subprocess, socket_helper
 try:
     import ssl
 except ImportError:
@@ -769,6 +769,7 @@ class StreamTests(test_utils.TestCase):
         self.assertEqual(msg1, b"hello world 1!\n")
         self.assertEqual(msg2, b"hello world 2!\n")
 
+    @requires_subprocess()
     @unittest.skipIf(sys.platform == 'win32', "Don't have pipes")
     def test_read_all_from_pipe_reader(self):
         # See asyncio issue 168.  This test is derived from the example

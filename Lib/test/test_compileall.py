@@ -15,7 +15,12 @@ import time
 import unittest
 
 from unittest import mock, skipUnless
+from test import support
+
 try:
+    if not support.has_subprocess_support:
+        raise NotImplementedError()
+
     # compileall relies on ProcessPoolExecutor if ProcessPoolExecutor exists
     # and it can function.
     from multiprocessing.util import _cleanup_tests as multiprocessing_cleanup_tests
@@ -26,7 +31,6 @@ try:
 except (NotImplementedError, ModuleNotFoundError):
     _have_multiprocessing = False
 
-from test import support
 from test.support import os_helper
 from test.support import script_helper
 from test.test_py_compile import without_source_date_epoch
@@ -977,7 +981,7 @@ class CommandLineTestsNoSourceEpoch(CommandLineTestsBase,
 
 
 
-@unittest.skipUnless(hasattr(os, 'link'), 'requires os.link')
+@unittest.skipUnless(os_helper.can_hardlink(), 'requires hardlink support')
 class HardlinkDedupTestsBase:
     # Test hardlink_dupes parameter of compileall.compile_dir()
 

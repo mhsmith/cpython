@@ -532,12 +532,19 @@ else:
 is_emscripten = sys.platform == "emscripten"
 is_wasi = sys.platform == "wasi"
 
-has_fork_support = hasattr(os, "fork") and not is_emscripten and not is_wasi
+# Although Android does support fork, it's unsafe to do anything in the child
+# other than an immediate exec, because all Android apps are multi-threaded.
+has_fork_support = (
+    hasattr(os, "fork")
+    and not (is_emscripten or is_wasi or is_android))
 
 def requires_fork():
     return unittest.skipUnless(has_fork_support, "requires working os.fork()")
 
-has_subprocess_support = not is_emscripten and not is_wasi
+# Although Android does support subproceses, they're almost never useful in
+# practice (see PEP 738). And virtually all the tests that use them are calling
+# sys.executable, which won't work when Python is embedded in an Android app.
+has_subprocess_support = not (is_emscripten or is_wasi or is_android)
 
 def requires_subprocess():
     """Used for subprocess, os.spawn calls, fd inheritance"""

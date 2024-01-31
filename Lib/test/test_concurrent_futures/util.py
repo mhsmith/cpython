@@ -114,11 +114,17 @@ class ProcessPoolForkserverMixin(ExecutorMixin):
         return super().get_context()
 
 
+thread_mixins = (ThreadPoolMixin,)
+process_mixins = (
+    () if not support.has_subprocess_support
+    else (ProcessPoolForkMixin,
+          ProcessPoolForkserverMixin,
+          ProcessPoolSpawnMixin)
+)
+
+
 def create_executor_tests(remote_globals, mixin, bases=(BaseTestCase,),
-                          executor_mixins=(ThreadPoolMixin,
-                                           ProcessPoolForkMixin,
-                                           ProcessPoolForkserverMixin,
-                                           ProcessPoolSpawnMixin)):
+                          executor_mixins=thread_mixins + process_mixins):
     def strip_mixin(name):
         if name.endswith(('Mixin', 'Tests')):
             return name[:-5]
@@ -136,6 +142,7 @@ def create_executor_tests(remote_globals, mixin, bases=(BaseTestCase,),
 
 
 def setup_module():
-    unittest.addModuleCleanup(multiprocessing.util._cleanup_tests)
+    if support.has_subprocess_support:
+        unittest.addModuleCleanup(multiprocessing.util._cleanup_tests)
     thread_info = threading_helper.threading_setup()
     unittest.addModuleCleanup(threading_helper.threading_cleanup, *thread_info)

@@ -695,6 +695,7 @@ print("</pre>")
 """
 
 
+@support.requires_subprocess()
 @unittest.skipIf(hasattr(os, 'geteuid') and os.geteuid() == 0,
         "This test can't be run reliably as root (issue #13308).")
 class CGIHTTPServerTestCase(BaseTestCase):
