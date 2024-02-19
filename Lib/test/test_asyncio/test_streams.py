@@ -769,7 +769,6 @@ class StreamTests(test_utils.TestCase):
         self.assertEqual(msg1, b"hello world 1!\n")
         self.assertEqual(msg2, b"hello world 2!\n")
 
-    @requires_subprocess()
     @unittest.skipIf(sys.platform == 'win32', "Don't have pipes")
     @requires_subprocess()
     def test_read_all_from_pipe_reader(self):

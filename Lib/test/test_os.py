@@ -2495,6 +2495,8 @@ class Pep383Tests(unittest.TestCase):
         # test listdir without arguments
         current_directory = os.getcwd()
         try:
+            # The root directory is not readable on Android, so use a directory
+            # we created ourselves.
             os.chdir(self.dir)
             self.assertEqual(set(os.listdir()), expected)
         finally:

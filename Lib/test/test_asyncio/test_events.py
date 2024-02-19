@@ -2098,14 +2098,6 @@ class SubprocessTestsMixin:
         with self.assertRaises(ValueError):
             self.loop.run_until_complete(connect(shell=False))
 
-# We don't apply the requires_subprocess decorator to the mixin class, because
-# that would cause its subclasses to skip all of their tests, not just the
-# subprocess ones.
-for name, member in list(SubprocessTestsMixin.__dict__.items()):
-    if name.startswith("test"):
-        setattr(SubprocessTestsMixin, name,
-                support.requires_subprocess()(member))
-
 
 if sys.platform == 'win32':
 
