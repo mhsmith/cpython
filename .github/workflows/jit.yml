@@ -1,14 +1,28 @@
 name: JIT
 on:
   pull_request:
-    paths: '**jit**'
+    paths:
+      - '**jit**'
+      - 'Python/bytecodes.c'
+      - 'Python/optimizer*.c'
+      - 'Python/tier2_redundancy_eliminator_bytecodes.c'
   push:
-    paths: '**jit**'
+    paths:
+      - '**jit**'
+      - 'Python/bytecodes.c'
+      - 'Python/optimizer*.c'
+      - 'Python/tier2_redundancy_eliminator_bytecodes.c'
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   jit:
     name: ${{ matrix.target }} (${{ matrix.debug && 'Debug' || 'Release' }})
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
