@@ -1,10 +1,11 @@
 import array
 import os
 import struct
+import sys
 import threading
 import unittest
-from test.support import get_attribute
-from test.support import threading_helper
+from test import support
+from test.support import os_helper, threading_helper
 from test.support.import_helper import import_module
 fcntl = import_module('fcntl')
 termios = import_module('termios')
@@ -12,7 +13,7 @@ termios = import_module('termios')
 class IoctlTestsTty(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        TIOCGPGRP = get_attribute(termios, 'TIOCGPGRP')
+        TIOCGPGRP = support.get_attribute(termios, 'TIOCGPGRP')
         try:
             tty = open("/dev/tty", "rb")
         except OSError:
@@ -139,11 +140,59 @@ class IoctlTestsPty(unittest.TestCase):
         self.addCleanup(os.close, self.master_fd)
 
     @unittest.skipUnless(hasattr(termios, 'TCFLSH'), 'requires termios.TCFLSH')
-    def test_ioctl_tcflush(self):
-        r = fcntl.ioctl(self.slave_fd, termios.TCFLSH, termios.TCIFLUSH)
-        self.assertEqual(r, 0)
-        r = fcntl.ioctl(self.slave_fd, termios.TCFLSH, termios.TCOFLUSH)
-        self.assertEqual(r, 0)
+    def test_ioctl_clear_input_or_output(self):
+        wfd = self.slave_fd
+        rfd = self.master_fd
+        # The data is buffered in the input buffer on Linux, and in
+        # the output buffer on other platforms.
+        inbuf = sys.platform in ('linux', 'android')
+
+        os.write(wfd, b'abcdef')
+        self.assertEqual(os.read(rfd, 2), b'ab')
+        if inbuf:
+            # don't flush input
+            fcntl.ioctl(rfd, termios.TCFLSH, termios.TCOFLUSH)
+        else:
+            # don't flush output
+            fcntl.ioctl(wfd, termios.TCFLSH, termios.TCIFLUSH)
+        self.assertEqual(os.read(rfd, 2), b'cd')
+        if inbuf:
+            # flush input
+            fcntl.ioctl(rfd, termios.TCFLSH, termios.TCIFLUSH)
+        else:
+            # flush output
+            fcntl.ioctl(wfd, termios.TCFLSH, termios.TCOFLUSH)
+        os.write(wfd, b'ABCDEF')
+        self.assertEqual(os.read(rfd, 1024), b'ABCDEF')
+
+    @unittest.skipUnless(sys.platform == 'linux', 'only works on Linux')
+    @unittest.skipUnless(hasattr(termios, 'TCXONC'), 'requires termios.TCXONC')
+    def test_ioctl_suspend_and_resume_output(self):
+        wfd = self.slave_fd
+        rfd = self.master_fd
+        write_suspended = threading.Event()
+        write_finished = threading.Event()
+
+        def writer():
+            os.write(wfd, b'abc')
+            self.assertTrue(write_suspended.wait(support.SHORT_TIMEOUT))
+            os.write(wfd, b'def')
+            write_finished.set()
+
+        with threading_helper.start_threads([threading.Thread(target=writer)]):
+            self.assertEqual(os.read(rfd, 3), b'abc')
+            try:
+                try:
+                    fcntl.ioctl(wfd, termios.TCXONC, termios.TCOOFF)
+                finally:
+                    write_suspended.set()
+                self.assertFalse(write_finished.wait(0.5),
+                                 'output was not suspended')
+            finally:
+                fcntl.ioctl(wfd, termios.TCXONC, termios.TCOON)
+            self.assertTrue(write_finished.wait(support.SHORT_TIMEOUT),
+                            'output was not resumed')
+            self.assertEqual(os.read(rfd, 1024), b'def')
 
     def test_ioctl_signed_unsigned_code_param(self):
         if termios.TIOCSWINSZ < 0:
@@ -158,6 +207,15 @@ class IoctlTestsPty(unittest.TestCase):
         # test both with a positive and potentially negative ioctl code
         new_winsz = fcntl.ioctl(self.master_fd, set_winsz_opcode_pos, our_winsz)
         new_winsz = fcntl.ioctl(self.master_fd, set_winsz_opcode_maybe_neg, our_winsz)
+
+    @unittest.skipUnless(hasattr(fcntl, 'FICLONE'), 'need fcntl.FICLONE')
+    def test_bad_fd(self):
+        # gh-134744: Test error handling
+        fd = os_helper.make_bad_fd()
+        with self.assertRaises(OSError):
+            fcntl.ioctl(fd, fcntl.FICLONE, fd)
+        with self.assertRaises(OSError):
+            fcntl.ioctl(fd, fcntl.FICLONE, b'\0' * 1024)
 
 
 if __name__ == "__main__":

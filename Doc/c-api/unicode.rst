@@ -68,8 +68,14 @@ Python:
 
 .. c:var:: PyTypeObject PyUnicode_Type
 
-   This instance of :c:type:`PyTypeObject` represents the Python Unicode type.  It
-   is exposed to Python code as ``str``.
+   This instance of :c:type:`PyTypeObject` represents the Python Unicode type.
+   It is exposed to Python code as ``str``.
+
+
+.. c:var:: PyTypeObject PyUnicodeIter_Type
+
+   This instance of :c:type:`PyTypeObject` represents the Python Unicode
+   iterator type. It is used to iterate over Unicode string objects.
 
 
 The following APIs are C macros and static inlined functions for fast checks and
@@ -613,6 +619,16 @@ APIs:
 
    The API returns ``NULL`` if there was an error.  The caller is responsible for
    decref'ing the returned objects.
+
+
+.. c:function:: PyObject* PyUnicode_BuildEncodingMap(PyObject* string)
+
+   Return a mapping suitable for decoding a custom single-byte encoding.
+   Given a Unicode string *string* of up to 256 characters representing an encoding
+   table, returns either a compact internal mapping object or a dictionary
+   mapping character ordinals to byte values. Raises a :exc:`TypeError` and
+   return ``NULL`` on invalid input.
+   .. versionadded:: 3.2
 
 
 .. c:function:: const char* PyUnicode_GetDefaultEncoding(void)
